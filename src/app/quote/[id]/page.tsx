@@ -2,10 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import { CreditCard, Download, Home, Check, ChevronRight, Shield, Clock, Mail } from 'lucide-react';
+import { CreditCard, Download, Home, Check, ChevronRight, Shield, Clock, Mail, Printer } from 'lucide-react';
 import Link from 'next/link';
 import PaymentForm from '../../../components/PaymentForm';
 import DeliveryAccessModal from '../../../components/DeliveryAccessModal';
+import ProductionLabel from '../../../components/ProductionLabel';
+import { extractSuburb, extractFirstName } from '../../../utils/address';
 import Image from 'next/image';
 
 // Sample invoice data (in a real app, this would come from a database)
@@ -61,7 +63,8 @@ export default function QuotePage() {
         if (response.ok) {
           const data = await response.json();
           // Convert database format to component format
-          const quote = data.quote;
+          // API returns direct quote object, not nested under 'quote'
+          const quote = data;
           const formattedInvoice = {
             id: quote.quote_number,
             invoiceNumber: quote.quote_number,
@@ -70,8 +73,8 @@ export default function QuotePage() {
             customerEmail: quote.customer_email,
             customerPhone: quote.customer_phone,
             customerAddress: quote.customer_address,
-            items: JSON.parse(quote.items),
-            notes: 'Thank you for choosing ausbeds for your sleep solution.',
+            items: Array.isArray(quote.items) ? quote.items : JSON.parse(quote.items || '[]'),
+            notes: quote.notes || 'Thank you for choosing ausbeds for your sleep solution.',
             taxRate: 10,
             total: quote.total,
             status: quote.status,
@@ -181,6 +184,120 @@ export default function QuotePage() {
 
   const hasExtraDeliveryFee = deliveryAccess === 'Stairs no help';
   const extraDeliveryFee = hasExtraDeliveryFee ? 50 : 0;
+
+  // Check if invoice has mattresses eligible for layer labels
+  const hasEligibleMattresses = () => {
+    if (!invoice?.items) return false;
+    return invoice.items.some((item: any) => {
+      if (!item.sku) return false;
+      const skuLower = item.sku.toLowerCase();
+      const isCloudOrAurora = skuLower.includes('cloud') || skuLower.includes('aurora');
+      const isKingOrQueen = skuLower.includes('king') || skuLower.includes('queen');
+      return isCloudOrAurora && isKingOrQueen;
+    });
+  };
+
+  // Get label items for printing
+  const getLabelItems = () => {
+    if (!invoice?.items) return [];
+    
+    return invoice.items.filter((item: any) => {
+      if (!item.sku) return false;
+      const skuLower = item.sku.toLowerCase();
+      const isCloudOrAurora = skuLower.includes('cloud') || skuLower.includes('aurora');
+      const isKingOrQueen = skuLower.includes('king') || skuLower.includes('queen');
+      return isCloudOrAurora && isKingOrQueen;
+    }).flatMap((item: any) => {
+      // Extract range and model from SKU
+      const skuLower = item.sku.toLowerCase();
+      let range = '';
+      let model = 0;
+      let size = '';
+      
+      // Parse range
+      if (skuLower.includes('cloud')) {
+        range = 'Cloud';
+        // Extract model number after 'cloud'
+        const modelMatch = item.sku.match(/cloud(\d+)/i);
+        if (modelMatch) {
+          model = parseInt(modelMatch[1]);
+        }
+      } else if (skuLower.includes('aurora')) {
+        range = 'Aurora';
+        // Extract model number after 'aurora'
+        const modelMatch = item.sku.match(/aurora(\d+)/i);
+        if (modelMatch) {
+          model = parseInt(modelMatch[1]);
+        }
+      }
+      
+      // Extract size
+      if (skuLower.includes('king')) {
+        size = 'King';
+      } else if (skuLower.includes('queen')) {
+        size = 'Queen';
+      }
+      
+      // Create one label for each quantity
+      const labels = [];
+      for (let i = 0; i < item.quantity; i++) {
+        labels.push({
+          productName: item.name,
+          customerName: invoice.customerName,
+          customerAddress: invoice.customerAddress,
+          size: size,
+          model: model,
+          range: range
+        });
+      }
+      
+      return labels;
+    });
+  };
+
+  const handlePrintLabels = () => {
+    const labelItems = getLabelItems();
+    
+    if (labelItems.length === 0) {
+      alert('No eligible mattresses found for production labels');
+      return;
+    }
+    
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Please allow pop-ups to print labels');
+      return;
+    }
+    
+    // Get the label component HTML
+    const labelContainer = document.createElement('div');
+    const root = require('react-dom/client').createRoot(labelContainer);
+    root.render(<ProductionLabel items={labelItems} />);
+    
+    // Wait a moment for React to render
+    setTimeout(() => {
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Production Labels</title>
+            <style>
+              @media print {
+                body { margin: 0; }
+                .production-label { page-break-after: always; }
+              }
+            </style>
+          </head>
+          <body>
+            ${labelContainer.innerHTML}
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }, 100);
+  };
 
   if (loading) {
     return (
@@ -465,6 +582,16 @@ export default function QuotePage() {
                       <Download className="w-4 h-4" />
                       Download Quote
                     </button>
+                    
+                    {hasEligibleMattresses() && (
+                      <button
+                        onClick={handlePrintLabels}
+                        className="w-full px-4 py-3 bg-[#5469D4] text-white rounded-xl hover:bg-[#4456C7] transition-colors inline-flex items-center justify-center gap-2 font-medium"
+                      >
+                        <Printer className="w-4 h-4" />
+                        Print Production Labels
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

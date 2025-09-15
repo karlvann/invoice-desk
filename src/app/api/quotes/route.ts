@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createQuote, getAllQuotes, getTotalQuotesCount, createOrUpdateCustomer } from '../../../../lib/db';
-import { getNextSequentialInvoiceNumber } from '../../../utils/invoice-sequential';
+import { createInvoice, getAllInvoices, generateInvoiceNumber } from '../../../../lib/json-storage';
+import type { Invoice } from '../../../../lib/json-storage';
 
 // POST - Create new quote (no auth required for creating quotes)
 export async function POST(req: NextRequest) {
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
 
     // Generate quote number if not provided using proper INV-YYYYMM-XXX format
     if (!quoteData.quoteNumber) {
-      quoteData.quoteNumber = await getNextSequentialInvoiceNumber();
+      quoteData.quoteNumber = generateInvoiceNumber();
     }
 
     // Validate required fields
@@ -54,16 +54,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Customer email is required' }, { status: 400 });
     }
 
-    // Create or update customer
-    await createOrUpdateCustomer({
-      name: quoteData.customerName,
-      email: quoteData.customerEmail,
-      phone: quoteData.customerPhone,
-      address: quoteData.customerAddress,
-    });
+    // Create quote using JSON storage
+    const invoiceData: Omit<Invoice, 'id' | 'created_at' | 'updated_at'> = {
+      quote_number: quoteData.quoteNumber,
+      customer_name: quoteData.customerName,
+      customer_email: quoteData.customerEmail,
+      customer_phone: quoteData.customerPhone,
+      customer_address: quoteData.customerAddress,
+      items: quoteData.items,
+      subtotal: quoteData.subtotal,
+      gst: quoteData.gst,
+      total: quoteData.total,
+      status: 'draft',
+      payment_status: 'pending',
+      delivery_access: quoteData.deliveryAccess,
+      notes: quoteData.notes
+    };
 
-    // Create quote
-    const quote = await createQuote(quoteData);
+    const quote = createInvoice(invoiceData);
 
     return NextResponse.json({ success: true, quote });
   } catch (error: any) {
@@ -77,7 +85,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET - Get all quotes with PAGINATION (Gordon's performance fix!)
+// GET - Get all quotes with PAGINATION
 export async function GET(req: NextRequest) {
   try {
     // Parse pagination params from query string
@@ -86,11 +94,12 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = (page - 1) * limit;
     
-    // Fetch paginated quotes and total count
-    const [quotes, totalCount] = await Promise.all([
-      getAllQuotes(limit, offset),
-      getTotalQuotesCount()
-    ]);
+    // Fetch paginated quotes from JSON storage
+    const quotes = getAllInvoices(limit, offset);
+    
+    // For pagination, we need total count - let's get all and count
+    const allQuotes = getAllInvoices(1000, 0); // Get reasonable max for prototype
+    const totalCount = allQuotes.length;
     
     // Calculate pagination metadata
     const totalPages = Math.ceil(totalCount / limit);

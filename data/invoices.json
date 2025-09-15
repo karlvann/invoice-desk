@@ -1,0 +1,90 @@
+[
+  {
+    "quote_number": "INV-202509-001",
+    "customer_name": "Test Customer",
+    "customer_email": "test@example.com",
+    "customer_phone": "0400000000",
+    "customer_address": "123 Test St, Sydney NSW 2000",
+    "items": [
+      {
+        "name": "Queen Mattress",
+        "price": 999,
+        "quantity": 1
+      }
+    ],
+    "subtotal": 999,
+    "gst": 90.82,
+    "total": 1089.82,
+    "status": "draft",
+    "payment_status": "pending",
+    "delivery_access": "standard",
+    "notes": "Test invoice for prototyping",
+    "id": 1,
+    "created_at": "2025-09-15T02:09:38.604Z",
+    "updated_at": "2025-09-15T02:09:38.604Z"
+  },
+  {
+    "quote_number": "INV-202509-002",
+    "customer_name": "John Smith",
+    "customer_email": "john@example.com",
+    "customer_phone": "0412345678",
+    "customer_address": "123 Test St\nSydney NSW 2000",
+    "items": [
+      {
+        "name": "Cloud 5 King Mattress",
+        "sku": "cloud5king",
+        "price": 2499,
+        "quantity": 1
+      },
+      {
+        "name": "Aurora 12 Queen Mattress",
+        "sku": "aurora12queen",
+        "price": 2799,
+        "quantity": 1
+      }
+    ],
+    "subtotal": 5298,
+    "gst": 481.64,
+    "total": 5779.64,
+    "status": "draft",
+    "payment_status": "pending",
+    "notes": "Test mattress order for layer functionality",
+    "id": 2,
+    "created_at": "2025-09-15T02:55:21.355Z",
+    "updated_at": "2025-09-15T02:55:21.355Z"
+  },
+  {
+    "quote_number": "INV-202509-T83255620",
+    "customer_name": "Test Customer",
+    "customer_email": "test@example.com",
+    "customer_phone": "0400000000",
+    "customer_address": "",
+    "items": [
+      {
+        "name": "Queen Mattress",
+        "price": 999,
+        "quantity": 1
+      },
+      {
+        "sku": "Cloud7queen",
+        "name": "Cloud 7 - medium - Queen",
+        "price": 2940,
+        "range": "Cloud",
+        "model": 7,
+        "firmness": "medium",
+        "size": "Queen",
+        "quantity": 1
+      }
+    ],
+    "subtotal": 3939,
+    "gst": 99.07454545454544,
+    "total": 1089.82,
+    "status": "draft",
+    "payment_status": "pending",
+    "delivery_access": "Base required - Hard floor (timber/tiles/concrete) floor",
+    "notes": "Delivery: FREE (0km)\nDelivery Date: 2025-09-20\n\nDelivery Date: 2025-09-20\nDelivery Option: specific\nNeeds Base: Yes\nFloor Type: Hard floor (timber/tiles/concrete)",
+    "id": 3,
+    "created_at": "2025-09-15T03:10:32.807Z",
+    "updated_at": "2025-09-15T03:10:32.807Z"
+  }
+]

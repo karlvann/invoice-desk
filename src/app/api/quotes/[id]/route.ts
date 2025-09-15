@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getQuote, updateQuoteStatus, updateQuoteDeliveryAccess, updateQuoteCustomerDetails } from '../../../../../lib/db';
+import { getInvoiceByQuoteNumber, updateInvoice } from '../../../../../lib/json-storage';
 
 // GET - Get specific quote  
 export async function GET(
@@ -8,7 +8,7 @@ export async function GET(
 ) {
   const { id } = await params;
   try {
-    const quote = await getQuote(id);
+    const quote = getInvoiceByQuoteNumber(id);
     
     if (!quote) {
       return NextResponse.json({ error: 'Quote not found' }, { status: 404 });
@@ -32,11 +32,11 @@ export async function PUT(
     
     // Check if updating customer details
     if (body.customerName || body.customerEmail) {
-      const quote = await updateQuoteCustomerDetails(id, {
-        customerName: body.customerName,
-        customerEmail: body.customerEmail,
-        customerPhone: body.customerPhone,
-        customerAddress: body.customerAddress
+      const quote = updateInvoice(id, {
+        customer_name: body.customerName,
+        customer_email: body.customerEmail,
+        customer_phone: body.customerPhone,
+        customer_address: body.customerAddress
       });
       
       if (!quote) {
@@ -48,7 +48,10 @@ export async function PUT(
     
     // Otherwise, update status
     const { status, paymentStatus } = body;
-    const quote = await updateQuoteStatus(id, status, paymentStatus);
+    const quote = updateInvoice(id, { 
+      status, 
+      payment_status: paymentStatus 
+    });
     
     if (!quote) {
       return NextResponse.json({ error: 'Quote not found' }, { status: 404 });
@@ -70,7 +73,7 @@ export async function PATCH(
   try {
     const { deliveryAccess } = await req.json();
     
-    const quote = await updateQuoteDeliveryAccess(id, deliveryAccess);
+    const quote = updateInvoice(id, { delivery_access: deliveryAccess });
     
     if (!quote) {
       return NextResponse.json({ error: 'Quote not found' }, { status: 404 });
