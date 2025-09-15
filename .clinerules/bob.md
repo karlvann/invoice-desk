@@ -94,7 +94,7 @@ If you MUST make a breaking change:
 
 **Two Separate Applications:**
 1. **Invoice App** (This project - Bob's domain)
-   - Port 3000
+   - Port 7002
    - UI, invoices, customers, emails
    
 2. **Payment App** (Kim's domain)  

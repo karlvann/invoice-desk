@@ -20,7 +20,7 @@ See root CLAUDE.md at `ausbeds-monorepo/CLAUDE.md` for:
 ### THREE-APP SYSTEM:
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   ASTRO:4321    │────▶│ INVOICE:3000    │────▶│ PAYMENT:3005    │
+│   ASTRO:4321    │────▶│ INVOICE:7002    │────▶│ PAYMENT:3005    │
 │                 │     │                 │     │                 │
 │ • Product pages │     │ • Quote/Invoice │     │ • Stripe API    │
 │ • Shopping cart │     │ • Checkout UI   │     │ • Webhooks      │
@@ -45,12 +45,12 @@ Invoice-app handles:
 ## DEVELOPMENT COMMANDS
 
 ```bash
-# Start development (enforces port 3000)
+# Start development (enforces port 7002)
 npm run dev              # Runs ./scripts/start-dev.sh with port cleanup
 
 # Alternative start commands
 npm run dev:next         # Standard Next.js dev server
-npm run dev:force        # Force port 3000
+npm run dev:force        # Force port 7002
 
 # Build and production
 npm run build           # Build for production
@@ -192,8 +192,8 @@ Before any deployment:
 6. Test database operations and soft delete functionality
 
 ## PORT MANAGEMENT
-- **ALWAYS runs on port 3000** (enforced by start script)
-- `npm run dev` automatically kills existing port 3000 processes
+- **ALWAYS runs on port 7002** (enforced by start script)
+- `npm run dev` automatically kills existing port 7002 processes
 - Script location: `./scripts/start-dev.sh`
 - Never use other ports for this app
 
@@ -214,7 +214,7 @@ Before any deployment:
 4. Verify Stripe webhook is forwarding correctly
 5. Use Stripe Dashboard for manual recovery
 
-### Port 3000 conflict
+### Port 7002 conflict
 Use `npm run dev` which auto-kills existing processes via `./scripts/start-dev.sh`
 
 ### Email failures
@@ -250,7 +250,7 @@ graph TD
     AstroStart[Customer on Astro site:4321] --> AddCart[Add items to cart]
     AddCart --> AstroCheckout[Click checkout button]
     AstroCheckout --> CreateQuote[Create draft quote via API]
-    CreateQuote --> InvoiceApp[invoice-app:3000/api/quotes]
+    CreateQuote --> InvoiceApp[invoice-app:7002/api/quotes]
     
     %% Entry Point 2: Email Quote
     EmailStart[Customer receives quote email] --> ClickLink[Clicks checkout link]
@@ -278,7 +278,7 @@ graph TD
     Elements --> Submit[Customer submits payment]
     
     Submit --> Process[Process payment]
-    Process --> Webhook[Stripe webhook → invoice-app:3000]
+    Process --> Webhook[Stripe webhook → invoice-app:7002]
     Webhook --> Invoice[Create paid invoice]
     Invoice --> Email[Send confirmation email]
     Email --> Success[Success page]
